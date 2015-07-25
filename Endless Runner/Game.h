@@ -14,6 +14,8 @@
 class GameData
 {
 	int mGameState;		/* The state of the game */
+	int mCharX;			/* Character pos x */
+	int mCharY;			/* Character pos y */
 	bool mChanged;		/* Check if screen changed */
 	bool mDone;			/* Check if done */
 	//Private Methods
