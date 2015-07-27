@@ -32,6 +32,8 @@ class GameData
 
 	SDL_Renderer* mRenderer;	/* The window renderer */
 	SDL_Texture* mTexture;		/* Current displayed texture */
+	SDL_Texture* mChar;			/* Texture for Hero */
+	SDL_Texture* mGround;		/* Texture for ground */
 	SDL_Texture* LoadTexture( std::string path );
 public:
 	//Constructors

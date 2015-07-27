@@ -5,8 +5,8 @@
 #include "Game.h"
 
 const int SDL_DELAY = 10;
-const int SCREEN_HEIGHT = 720;
-const int SCREEN_WIDTH = 1280;
+const int SCREEN_HEIGHT = 480;
+const int SCREEN_WIDTH = 640;
 	
 /**
  *Sets up the loading of SDL
@@ -48,7 +48,7 @@ int GameData::Setup()
 	}
 	
 	mCharX = 50;
-	mCharY = 50;
+	mCharY = SCREEN_HEIGHT - 100;
 	return 0;
 }
 
@@ -97,27 +97,41 @@ SDL_Texture* GameData::LoadTexture( std::string path )
 	return newTexture;
 }
 
-int GameData::DrawBackG()
+/**
+ * Draws floor using mGround texture
+ * 
+ */
+int GameData::DrawFloor()
 {
 	SDL_Rect fillRect = { 0 , (SCREEN_HEIGHT-50), SCREEN_WIDTH, 50};
-	SDL_SetRenderDrawColor( mRenderer, 0xFF, 0x00, 0x00, 0xFF ); 
-	SDL_RenderFillRect( mRenderer, &fillRect );
+	//SDL_SetRenderDrawColor( mRenderer, 0xFF, 0x00, 0x00, 0xFF ); 
+	//SDL_RenderFillRect( mRenderer, &fillRect );
+	SDL_RenderCopy( mRenderer, mGround, NULL, &fillRect);
 	return 0;
 }
+
+/**
+ * Draw your character on screen
+ * Using mChar texture
+ */
 
 int GameData::DrawChar()
 {
 	SDL_Rect fillRect = {mCharX,mCharY, 50, 50};
-	SDL_SetRenderDrawColor( mRenderer, 0x00, 0xFF, 0x00, 0xFF ); 
-	SDL_RenderFillRect( mRenderer, &fillRect );
+	SDL_RenderCopy( mRenderer, mChar, NULL, &fillRect);
 	return 0;
 }
 
+/**
+ * Draw a platform
+ * Future: Draw Objects
+ */
 int GameData::DrawStuff()
 {
 	SDL_Rect fillRect = { SCREEN_WIDTH/2 , (SCREEN_HEIGHT-200), 500, 50};
-	SDL_SetRenderDrawColor( mRenderer, 0x00, 0xFF, 0x00, 0xFF ); 
-	SDL_RenderFillRect( mRenderer, &fillRect );
+	//SDL_SetRenderDrawColor( mRenderer, 0x00, 0xFF, 0x00, 0xFF ); 
+	//SDL_RenderFillRect( mRenderer, &fillRect );
+	SDL_RenderCopy( mRenderer, mGround, NULL, &fillRect);
 	return 0;
 }
 
@@ -131,10 +145,10 @@ int GameData::Draw()
 	//SDL_UpdatemWindowSurface(mWindow);
 	//Clear screen 
 	SDL_RenderClear( mRenderer ); 
-	//Render texture to screen 
+	//Render texture to screen
 	SDL_RenderCopy( mRenderer, mTexture, NULL, NULL ); 
 	//Update screen
-	DrawBackG();
+	DrawFloor();
 	DrawChar();
 	DrawStuff();
 	SDL_RenderPresent( mRenderer );
@@ -151,9 +165,18 @@ int GameData::Draw()
  int GameData::LoadMedia() 
  {
 	 //Load PNG texture 
-	 mTexture = LoadTexture( "Image/Right.png" ); 
-	 if( mTexture == NULL ) 
+	 if(( mTexture = LoadTexture( "Image/Right.png" )) == NULL ) 
 	 { 
+		 printf( "Failed to load texture image!\n" ); 
+		 return -1;
+	 }
+	 if ((mChar = LoadTexture("Image/Char.png" )) == NULL)
+	 {
+		 printf( "Failed to load texture image!\n" ); 
+		 return -1;
+	 }
+	 if ((mGround = LoadTexture("Image/Ground.png" )) == NULL)
+	 {
 		 printf( "Failed to load texture image!\n" ); 
 		 return -1;
 	 }
