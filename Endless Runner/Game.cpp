@@ -7,11 +7,26 @@
 const int SDL_DELAY = 10;
 const int SCREEN_HEIGHT = 480;
 const int SCREEN_WIDTH = 640;
+const int CHAR_HEIGHT = 50;
+const int CHAR_WIDTH = 50;
+const int CHAR_SPEED = 3;
 	
 /**
  *Sets up the loading of SDL
  *Creates window, renderer, and img flags
  */
+
+void GameData::SetPhysics()
+{
+	mCharX = 50;
+	mCharY = SCREEN_HEIGHT - 100;
+	mVelX = 0;
+	mVelY = 0;
+	mGrav = 9;
+	mJump = -27;
+
+}
+
 int GameData::Setup()
 {
 	if (SDL_Init( SDL_INIT_EVERYTHING ) < 0)
@@ -47,8 +62,8 @@ int GameData::Setup()
 		}
 	}
 	
-	mCharX = 50;
-	mCharY = SCREEN_HEIGHT - 100;
+	SetPhysics();
+	mChanged = true;
 	return 0;
 }
 
@@ -197,15 +212,66 @@ int GameData::Input()
 	{
 		switch(e.key.keysym.sym)
 		{
-		case SDLK_UP:
-			mCharY--;
-		case SDLK_DOWN:
-			mCharY++;
-		case SDLK_LEFT:
-			mCharX--;
-		case SDLK_RIGHT:
-			mCharX++;
+		case SDLK_SPACE:
+			mVelY += mJump;
+			printf("Jump \n");
+			break;
+		case SDLK_a:
+			mVelX -= CHAR_SPEED;
+			printf("Left \n");
+			break;
+		case SDLK_d:
+			mVelX += CHAR_SPEED;
+			printf("Right \n");
+			break;
+		default:
+			printf("Nothing \n");
+			break;
 		};
+		mChanged = true;
+	}
+	return 0;
+}
+
+/**
+ *Moves the Character based on grav, position, input, and floor
+ *
+ */
+int GameData::Move(){
+	//X Velocity Control
+	mCharX += mVelX;
+	if  (( mCharX < 0 ) || ( mCharX + CHAR_WIDTH > SCREEN_WIDTH ) )
+	{
+		mCharX -= mVelX;
+		mVelX = 0;
+	}
+	
+	// Y Velocity Control
+	if (mCharY > 0)
+	{
+		mCharY += mVelY;
+	}
+	if (mCharY + CHAR_WIDTH + 50 < SCREEN_HEIGHT)
+	{
+		mVelY += mGrav;
+	}
+	if  (( mCharY < 0 ) || ( mCharY + CHAR_WIDTH + 50 > SCREEN_HEIGHT ) )
+	{
+		mCharY += mVelY;
+		mVelY = 0;
+	}
+
+	return 0;
+}
+
+
+int GameData::Update()
+{
+	if (mVelX > 0 || mVelY > 0)
+	{
+		Move();
+		mChanged = false;
+		return -1;
 	}
 	return 0;
 }
@@ -220,7 +286,10 @@ int GameData::Run()
 	do
 	{
 		Input();
-		Draw();
+		if (Update() < 0)
+		{
+			Draw();
+		}
 		SDL_Delay(SDL_DELAY);
 	}while(!mDone);
 

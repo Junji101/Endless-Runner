@@ -16,9 +16,17 @@ class GameData
 	int mGameState;		/* The state of the game */
 	int mCharX;			/* Character pos x */
 	int mCharY;			/* Character pos y */
+	//Inputting Velocities for Gravity
+	int mVelX;			/* Character velocity x */
+	int mVelY;			/* Character velocity y */
+	int mGrav;			/* Velocity downward fo gravity */
+	int mJump;			/* Jump Velocity */
+
 	bool mChanged;		/* Check if screen changed */
 	bool mDone;			/* Check if done */
 	//Private Methods
+	void SetPhysics();
+	int Move();
 	int Input();
 	int Update();
 	int Draw();
@@ -27,9 +35,8 @@ class GameData
 	int DrawChar();
 	int DrawFloor();
 	int DrawStuff();
+
 	SDL_Window* mWindow;		/* Window from SDL */
-
-
 	SDL_Renderer* mRenderer;	/* The window renderer */
 	SDL_Texture* mTexture;		/* Current displayed texture */
 	SDL_Texture* mChar;			/* Texture for Hero */
