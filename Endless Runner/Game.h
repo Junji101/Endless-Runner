@@ -21,8 +21,11 @@ class GameData
 	int mVelY;			/* Character velocity y */
 	int mGrav;			/* Velocity downward fo gravity */
 	int mJump;			/* Jump Velocity */
+	//Rect for later use
+	SDL_Rect mTempRect;
 
 	bool mChanged;		/* Check if screen changed */
+	bool mBox;
 	bool mDone;			/* Check if done */
 	//Private Methods
 	void SetPhysics();
@@ -41,7 +44,8 @@ class GameData
 	SDL_Texture* mTexture;		/* Current displayed texture */
 	SDL_Texture* mChar;			/* Texture for Hero */
 	SDL_Texture* mGround;		/* Texture for ground */
-	SDL_Texture* LoadTexture( std::string path );
+	SDL_Rect* LoadRect(int a[2], int b[2],int c,int d);		/* Rand Rectangle Function */
+	SDL_Texture* LoadTexture( std::string path );	/* Load Texture from file */
 public:
 	//Constructors
 

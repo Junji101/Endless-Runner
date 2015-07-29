@@ -2,14 +2,23 @@
 #include <SDL_image.h>
 #include <stdio.h>
 #include <string>
+#include <iostream>
 #include "Game.h"
 
 const int SDL_DELAY = 10;
 const int SCREEN_HEIGHT = 480;
 const int SCREEN_WIDTH = 640;
+//Char specifics
 const int CHAR_HEIGHT = 50;
 const int CHAR_WIDTH = 50;
 const int CHAR_SPEED = 3;
+//Rect Generation
+const int BOX_X_MIN = SCREEN_WIDTH/3;
+const int BOX_X_MAX = 2*SCREEN_WIDTH/3;
+const int BOX_Y_MIN = SCREEN_HEIGHT/3;
+const int BOX_Y_MAX = 2*SCREEN_HEIGHT/3;
+const int BOX_HEIGHT_MAX = SCREEN_HEIGHT/5;
+const int BOX_WIDTH_MAX = SCREEN_HEIGHT/3;
 	
 /**
  *Sets up the loading of SDL
@@ -63,6 +72,7 @@ int GameData::Setup()
 	}
 	
 	SetPhysics();
+	mBox = false;
 	mChanged = true;
 	return 0;
 }
@@ -82,6 +92,25 @@ int GameData::Shutdown()
 	SDL_Quit();
 	return 0;
 }
+
+/**
+ * Create Random Rect given limits
+ * Rect created with (x,y) ; (h,w)
+ * a[1] is max, a[2] is min
+ */
+SDL_Rect* GameData::LoadRect(int a[2], int b[2], int c, int d)
+{
+	SDL_Rect* newRect = NULL;
+
+	mTempRect.x = rand() % (a[0]-a[1]) + a[1];
+	mTempRect.y = rand() % (b[0]-b[1]) + b[1];
+	mTempRect.h = rand() % c;
+	mTempRect.w = rand() % d;
+	
+	newRect = &mTempRect;
+	return newRect;
+}
+
 
 /**
  * Gets string for path of image
@@ -143,10 +172,21 @@ int GameData::DrawChar()
  */
 int GameData::DrawStuff()
 {
-	SDL_Rect fillRect = { SCREEN_WIDTH/2 , (SCREEN_HEIGHT-200), 500, 50};
-	//SDL_SetRenderDrawColor( mRenderer, 0x00, 0xFF, 0x00, 0xFF ); 
-	//SDL_RenderFillRect( mRenderer, &fillRect );
-	SDL_RenderCopy( mRenderer, mGround, NULL, &fillRect);
+	//SDL_Rect fillRect = { SCREEN_WIDTH/2 , (SCREEN_HEIGHT-200), 500, 50};
+	int xBox[] = {BOX_X_MAX,BOX_X_MIN};
+	int yBox[] = {BOX_Y_MAX,BOX_X_MIN};
+	SDL_Rect* tempRect = LoadRect(xBox,yBox,BOX_HEIGHT_MAX, BOX_WIDTH_MAX);
+	SDL_RenderCopy( mRenderer, mGround, NULL, tempRect);
+
+	return 0;
+}
+
+/**
+*Drawing Background
+*/
+int GameData::DrawBackG()
+{
+	SDL_RenderCopy( mRenderer, mTexture, NULL, NULL );
 	return 0;
 }
 
@@ -161,11 +201,16 @@ int GameData::Draw()
 	//Clear screen 
 	SDL_RenderClear( mRenderer ); 
 	//Render texture to screen
-	SDL_RenderCopy( mRenderer, mTexture, NULL, NULL ); 
-	//Update screen
+	DrawBackG();
 	DrawFloor();
 	DrawChar();
-	DrawStuff();
+	if (mBox)
+	{
+		printf("mBox = true");
+		DrawStuff();
+		mBox = false;
+	}
+	//Update screen
 	SDL_RenderPresent( mRenderer );
 
 	return 0;
@@ -223,6 +268,10 @@ int GameData::Input()
 		case SDLK_d:
 			mVelX += CHAR_SPEED;
 			printf("Right \n");
+			break;
+		case SDLK_m:
+			mBox = true;
+			printf("New Box \n");
 			break;
 		default:
 			printf("Nothing \n");
@@ -286,7 +335,7 @@ int GameData::Run()
 	do
 	{
 		Input();
-		if (Update() < 0)
+		if (Update() < 0 || mChanged)
 		{
 			Draw();
 		}
