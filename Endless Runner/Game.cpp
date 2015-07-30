@@ -103,12 +103,12 @@ SDL_Rect* GameData::LoadRect(int a[2], int b[2], int c, int d)
 {
 	SDL_Rect* newRect = NULL;
 
-	mTempRect.x = rand() % (a[0]-a[1]) + a[1];
-	mTempRect.y = rand() % (b[0]-b[1]) + b[1];
-	mTempRect.h = rand() % c;
-	mTempRect.w = rand() % d;
+	mTempRect[mBoxCount].x = rand() % (a[0]-a[1]) + a[1];
+	mTempRect[mBoxCount].y = rand() % (b[0]-b[1]) + b[1];
+	mTempRect[mBoxCount].h = rand() % c;
+	mTempRect[mBoxCount].w = rand() % d;
 	
-	newRect = &mTempRect;
+	newRect = &mTempRect[mBoxCount];
 	return newRect;
 }
 
@@ -189,7 +189,7 @@ int GameData::DrawStuff(int RectNum)
 	//SDL_Rect fillRect = { SCREEN_WIDTH/2 , (SCREEN_HEIGHT-200), 500, 50};
 	
 	SDL_RenderCopy( mRenderer, mGround, NULL, mRects[RectNum]);
-	std::cout << "RectNum = " << RectNum << std::endl;
+	//std::cout << "RectNum = " << mRects[RectNum] << std::endl;
 	return 0;
 }
 
@@ -226,7 +226,7 @@ int GameData::Draw()
 		mBox = false;
 		if (mBoxCount != BOX_MAX)
 		{
-			printf("mBox Count: %d",mBoxCount);
+			printf("mBox Count: %d \n",(mBoxCount+1));
 			AddRect();
 			mBoxCount++;
 		}
@@ -292,7 +292,8 @@ int GameData::Input()
 			break;
 		case SDLK_m:
 			mBox = true;
-			printf("New Box \n");
+			if (mBoxCount != BOX_MAX) printf("New Box \n");
+			else printf("Max Boxes reached \n");
 			break;
 		default:
 			printf("Nothing \n");
@@ -334,10 +335,13 @@ int GameData::Move(){
 	return 0;
 }
 
-
+/**
+ * Update the characters position
+ * Calls Move() if character is moving.
+ */
 int GameData::Update()
 {
-	if (mVelX > 0 || mVelY > 0)
+	if (mVelX != 0 || mVelY != 0)
 	{
 		Move();
 		mChanged = false;

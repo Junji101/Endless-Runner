@@ -23,7 +23,7 @@ class GameData
 	int mJump;			/* Jump Velocity */
 	int mBoxCount;		/* Counts objects on screen */
 	//Rect for later use
-	SDL_Rect mTempRect;
+	SDL_Rect mTempRect[10];
 
 	bool mChanged;		/* Check if screen changed */
 	bool mBox;			/* Check if box is made */
