@@ -19,6 +19,7 @@ const int BOX_Y_MIN = SCREEN_HEIGHT/3;
 const int BOX_Y_MAX = 2*SCREEN_HEIGHT/3;
 const int BOX_HEIGHT_MAX = SCREEN_HEIGHT/5;
 const int BOX_WIDTH_MAX = SCREEN_HEIGHT/3;
+const int BOX_MAX = 10;
 	
 /**
  *Sets up the loading of SDL
@@ -166,18 +167,29 @@ int GameData::DrawChar()
 	return 0;
 }
 
+int GameData::AddRect()
+{
+	SDL_Rect* tempRect = NULL;
+	if (mBoxCount != BOX_MAX)
+	{
+		int xBox[] = {BOX_X_MAX,BOX_X_MIN};
+		int yBox[] = {BOX_Y_MAX,BOX_X_MIN};
+		tempRect = LoadRect(xBox,yBox,BOX_HEIGHT_MAX, BOX_WIDTH_MAX);
+		mRects[mBoxCount] = tempRect;
+	}
+	return 0;
+}
+
 /**
  * Draw a platform
  * Future: Draw Objects
  */
-int GameData::DrawStuff()
+int GameData::DrawStuff(int RectNum)
 {
 	//SDL_Rect fillRect = { SCREEN_WIDTH/2 , (SCREEN_HEIGHT-200), 500, 50};
-	int xBox[] = {BOX_X_MAX,BOX_X_MIN};
-	int yBox[] = {BOX_Y_MAX,BOX_X_MIN};
-	SDL_Rect* tempRect = LoadRect(xBox,yBox,BOX_HEIGHT_MAX, BOX_WIDTH_MAX);
-	SDL_RenderCopy( mRenderer, mGround, NULL, tempRect);
-
+	
+	SDL_RenderCopy( mRenderer, mGround, NULL, mRects[RectNum]);
+	std::cout << "RectNum = " << RectNum << std::endl;
 	return 0;
 }
 
@@ -204,11 +216,20 @@ int GameData::Draw()
 	DrawBackG();
 	DrawFloor();
 	DrawChar();
+	for(int i = 0;i < mBoxCount; i++)
+	{
+		DrawStuff(i);
+	}
 	if (mBox)
 	{
-		printf("mBox = true");
-		DrawStuff();
+		//printf("mBox = true \n");
 		mBox = false;
+		if (mBoxCount != BOX_MAX)
+		{
+			printf("mBox Count: %d",mBoxCount);
+			AddRect();
+			mBoxCount++;
+		}
 	}
 	//Update screen
 	SDL_RenderPresent( mRenderer );
@@ -322,6 +343,7 @@ int GameData::Update()
 		mChanged = false;
 		return -1;
 	}
+
 	return 0;
 }
 
