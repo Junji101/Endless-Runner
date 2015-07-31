@@ -1,7 +1,7 @@
 /*What is function?
- *Argv = Arguments needed?
+ *@param -argument -desc
  *
- *
+ *@return desc of what it returns
  */
 
 #ifndef __GAME_H
@@ -21,6 +21,7 @@ class GameData
 	int mVelY;			/* Character velocity y */
 	int mGrav;			/* Velocity downward fo gravity */
 	int mJump;			/* Jump Velocity */
+	int mTime;
 	int mBoxCount;		/* Counts objects on screen */
 	//Rect for later use
 	SDL_Rect mTempRect[10];
@@ -31,6 +32,7 @@ class GameData
 	//Private Methods
 	void SetPhysics();
 	int AddRect();
+	int GetFrameNum(int vel, int time);
 	int Move();
 	int Input();
 	int Update();
@@ -47,6 +49,7 @@ class GameData
 	SDL_Texture* mChar;			/* Texture for Hero */
 	SDL_Texture* mGround;		/* Texture for ground */
 	SDL_Rect* mRects[10];
+	SDL_Rect* GetFrameRect(int frame);
 	SDL_Rect* LoadRect(int a[2], int b[2],int c,int d);		/* Rand Rectangle Function */
 	SDL_Texture* LoadTexture( std::string path );	/* Load Texture from file */
 public:

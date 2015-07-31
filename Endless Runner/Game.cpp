@@ -3,14 +3,16 @@
 #include <stdio.h>
 #include <string>
 #include <iostream>
+#include <ctime>
 #include "Game.h"
 
 const int SDL_DELAY = 10;
+const int TIME_CONSTANT = 25;
 const int SCREEN_HEIGHT = 480;
 const int SCREEN_WIDTH = 640;
 //Char specifics
-const int CHAR_HEIGHT = 50;
-const int CHAR_WIDTH = 50;
+const int CHAR_HEIGHT = 27;
+const int CHAR_WIDTH = 24;
 const int CHAR_SPEED = 3;
 //Rect Generation
 const int BOX_X_MIN = SCREEN_WIDTH/3;
@@ -21,10 +23,7 @@ const int BOX_HEIGHT_MAX = SCREEN_HEIGHT/5;
 const int BOX_WIDTH_MAX = SCREEN_HEIGHT/3;
 const int BOX_MAX = 10;
 	
-/**
- *Sets up the loading of SDL
- *Creates window, renderer, and img flags
- */
+
 
 void GameData::SetPhysics()
 {
@@ -34,9 +33,15 @@ void GameData::SetPhysics()
 	mVelY = 0;
 	mGrav = 9;
 	mJump = -27;
+	mTime = 0;
+	srand(time(0));
 
 }
 
+/**
+ *Sets up the loading of SDL
+ *@return Creates window, renderer, and img flags
+ */
 int GameData::Setup()
 {
 	if (SDL_Init( SDL_INIT_EVERYTHING ) < 0)
@@ -95,6 +100,29 @@ int GameData::Shutdown()
 }
 
 /**
+ * Get Rect coords based on frame
+ * @param frame = current frame
+ * @return SDL_Rect*
+ */
+SDL_Rect* GameData::GetFrameRect(int frame)
+{
+	SDL_Rect tempRect;
+	tempRect.h = CHAR_HEIGHT;
+	tempRect.w = CHAR_WIDTH;
+	tempRect.y = 0;
+	switch(frame)
+	{
+		case 0: tempRect.x = 0; break;
+		case 1: tempRect.x = CHAR_WIDTH; break;
+		case 2: tempRect.x = 2*CHAR_WIDTH; break;
+		default: tempRect.x = 0; break;
+	}
+
+	return &tempRect;
+}
+
+
+/**
  * Create Random Rect given limits
  * Rect created with (x,y) ; (h,w)
  * a[1] is max, a[2] is min
@@ -116,7 +144,7 @@ SDL_Rect* GameData::LoadRect(int a[2], int b[2], int c, int d)
 /**
  * Gets string for path of image
  * Converts from Surface to Texture
- * Returns to texture
+ * @return texture
  */
 SDL_Texture* GameData::LoadTexture( std::string path ) 
 {
@@ -143,6 +171,22 @@ SDL_Texture* GameData::LoadTexture( std::string path )
 }
 
 /**
+ * Gives frame number
+ * @param vel -Velocity of char
+ * @param time -time stamp
+ * @return frame num
+ */
+int GameData::GetFrameNum(int vel, int time)
+{
+	if(vel > 0)
+	{
+		return time;
+	}
+
+	return 0;
+}
+
+/**
  * Draws floor using mGround texture
  * 
  */
@@ -159,14 +203,17 @@ int GameData::DrawFloor()
  * Draw your character on screen
  * Using mChar texture
  */
-
 int GameData::DrawChar()
 {
 	SDL_Rect fillRect = {mCharX,mCharY, 50, 50};
-	SDL_RenderCopy( mRenderer, mChar, NULL, &fillRect);
+	SDL_RenderCopy( mRenderer, mChar, GetFrameRect(GetFrameNum(mVelX,(mTime%3))), &fillRect);
 	return 0;
 }
 
+/**
+ * Add a rectangle to the array
+ *
+ */
 int GameData::AddRect()
 {
 	SDL_Rect* tempRect = NULL;
@@ -182,7 +229,7 @@ int GameData::AddRect()
 
 /**
  * Draw a platform
- * Future: Draw Objects
+ * @param RectNum -Rectangle in array that is rendering
  */
 int GameData::DrawStuff(int RectNum)
 {
@@ -251,7 +298,7 @@ int GameData::Draw()
 		 printf( "Failed to load texture image!\n" ); 
 		 return -1;
 	 }
-	 if ((mChar = LoadTexture("Image/Char.png" )) == NULL)
+	 if ((mChar = LoadTexture("Image/Bowser.png" )) == NULL)
 	 {
 		 printf( "Failed to load texture image!\n" ); 
 		 return -1;
@@ -341,6 +388,10 @@ int GameData::Move(){
  */
 int GameData::Update()
 {
+	if (SDL_GetTicks() % TIME_CONSTANT == 0)
+	{
+		mTime++;
+	}
 	if (mVelX != 0 || mVelY != 0)
 	{
 		Move();
@@ -348,6 +399,7 @@ int GameData::Update()
 		return -1;
 	}
 
+	
 	return 0;
 }
 
