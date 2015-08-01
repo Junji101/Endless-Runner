@@ -22,6 +22,8 @@ class GameData
 	int mGrav;			/* Velocity downward fo gravity */
 	int mJump;			/* Jump Velocity */
 	int mTime;
+	int mLastTime;
+	int mDeltaTime;
 	int mBoxCount;		/* Counts objects on screen */
 	//Rect for later use
 	SDL_Rect mTempRect[10];
@@ -31,8 +33,9 @@ class GameData
 	bool mDone;			/* Check if done */
 	//Private Methods
 	void SetPhysics();
-	int AddRect();
-	int GetFrameNum(int vel, int time);
+	int GetRectNum();	/* Gets the num of an empty Rect */
+	int AddRect();		/* Adds a rect to a memory alloc in mRects[] */
+	int GetFrameNum(int vel, int time);	/*Gets num of Frame to use from char */
 	int Move();
 	int Input();
 	int Update();
@@ -41,7 +44,9 @@ class GameData
 	int DrawBackG();
 	int DrawChar();
 	int DrawFloor();
-	int DrawStuff(int RectNum);
+	int DrawStuff();
+	//Rect Handler
+	void RectHandler();	/* Handles the Rectangles on screen */
 
 	SDL_Window* mWindow;		/* Window from SDL */
 	SDL_Renderer* mRenderer;	/* The window renderer */

@@ -7,7 +7,7 @@
 #include "Game.h"
 
 const int SDL_DELAY = 10;
-const int TIME_CONSTANT = 25;
+const int TIME_CONSTANT = 300;
 const int SCREEN_HEIGHT = 480;
 const int SCREEN_WIDTH = 640;
 //Char specifics
@@ -22,6 +22,7 @@ const int BOX_Y_MAX = 2*SCREEN_HEIGHT/3;
 const int BOX_HEIGHT_MAX = SCREEN_HEIGHT/5;
 const int BOX_WIDTH_MAX = SCREEN_HEIGHT/3;
 const int BOX_MAX = 10;
+const int BOX_SPEED = 3;
 	
 
 
@@ -130,13 +131,17 @@ SDL_Rect* GameData::GetFrameRect(int frame)
 SDL_Rect* GameData::LoadRect(int a[2], int b[2], int c, int d)
 {
 	SDL_Rect* newRect = NULL;
-
-	mTempRect[mBoxCount].x = rand() % (a[0]-a[1]) + a[1];
-	mTempRect[mBoxCount].y = rand() % (b[0]-b[1]) + b[1];
-	mTempRect[mBoxCount].h = rand() % c;
-	mTempRect[mBoxCount].w = rand() % d;
+	if (GetRectNum() < 0)
+	{
+		return newRect;
+	}
+	int tempNum = GetRectNum();
+	mTempRect[tempNum].x = rand() % (a[0]-a[1]) + a[1];
+	mTempRect[tempNum].y = rand() % (b[0]-b[1]) + b[1];
+	mTempRect[tempNum].h = rand() % c;
+	mTempRect[tempNum].w = rand() % d;
 	
-	newRect = &mTempRect[mBoxCount];
+	newRect = &mTempRect[tempNum];
 	return newRect;
 }
 
@@ -178,9 +183,18 @@ SDL_Texture* GameData::LoadTexture( std::string path )
  */
 int GameData::GetFrameNum(int vel, int time)
 {
-	if(vel > 0)
+	int tempTime = time%120;
+	if(vel != 0)
 	{
-		return time;
+		if (tempTime < 40)
+		{
+			return 0;
+		} else if (tempTime < 80)
+		{
+			return 1;
+		} else{
+			return 2;
+		}
 	}
 
 	return 0;
@@ -210,6 +224,18 @@ int GameData::DrawChar()
 	return 0;
 }
 
+int GameData::GetRectNum()
+{
+	for (int i = 0; i < BOX_MAX; i++)
+	{
+		if (mRects[i] == NULL)
+		{
+			return i;
+		}
+	}
+	return -1;
+}
+
 /**
  * Add a rectangle to the array
  *
@@ -217,13 +243,13 @@ int GameData::DrawChar()
 int GameData::AddRect()
 {
 	SDL_Rect* tempRect = NULL;
-	if (mBoxCount != BOX_MAX)
+	int xBox[] = {BOX_X_MAX,BOX_X_MIN};
+	int yBox[] = {BOX_Y_MAX,BOX_X_MIN};
+	if ((tempRect = LoadRect(xBox,yBox,BOX_HEIGHT_MAX, BOX_WIDTH_MAX)) == NULL)
 	{
-		int xBox[] = {BOX_X_MAX,BOX_X_MIN};
-		int yBox[] = {BOX_Y_MAX,BOX_X_MIN};
-		tempRect = LoadRect(xBox,yBox,BOX_HEIGHT_MAX, BOX_WIDTH_MAX);
-		mRects[mBoxCount] = tempRect;
+		return -1;
 	}
+	mRects[GetRectNum()] = tempRect;
 	return 0;
 }
 
@@ -231,11 +257,17 @@ int GameData::AddRect()
  * Draw a platform
  * @param RectNum -Rectangle in array that is rendering
  */
-int GameData::DrawStuff(int RectNum)
+int GameData::DrawStuff()
 {
 	//SDL_Rect fillRect = { SCREEN_WIDTH/2 , (SCREEN_HEIGHT-200), 500, 50};
-	
-	SDL_RenderCopy( mRenderer, mGround, NULL, mRects[RectNum]);
+
+	for(int i = 0;i < BOX_MAX; i++)
+	{
+		if (mRects[i] != NULL)
+		{
+			SDL_RenderCopy( mRenderer, mGround, NULL, mRects[i]);
+		}
+	}
 	//std::cout << "RectNum = " << mRects[RectNum] << std::endl;
 	return 0;
 }
@@ -263,21 +295,8 @@ int GameData::Draw()
 	DrawBackG();
 	DrawFloor();
 	DrawChar();
-	for(int i = 0;i < mBoxCount; i++)
-	{
-		DrawStuff(i);
-	}
-	if (mBox)
-	{
-		//printf("mBox = true \n");
-		mBox = false;
-		if (mBoxCount != BOX_MAX)
-		{
-			printf("mBox Count: %d \n",(mBoxCount+1));
-			AddRect();
-			mBoxCount++;
-		}
-	}
+	DrawStuff();
+
 	//Update screen
 	SDL_RenderPresent( mRenderer );
 
@@ -337,11 +356,6 @@ int GameData::Input()
 			mVelX += CHAR_SPEED;
 			printf("Right \n");
 			break;
-		case SDLK_m:
-			mBox = true;
-			if (mBoxCount != BOX_MAX) printf("New Box \n");
-			else printf("Max Boxes reached \n");
-			break;
 		default:
 			printf("Nothing \n");
 			break;
@@ -383,15 +397,40 @@ int GameData::Move(){
 }
 
 /**
+ * Manages the positions and memory of the Rects on screen
+ *
+ */
+
+void GameData::RectHandler()
+{
+	
+	for(int i = 0; i < 10; i++)
+	{
+		if(mRects[i] != NULL)
+		{
+			
+			mRects[i]->x -= BOX_SPEED;
+			if ((mRects[i]->x) < BOX_SPEED)
+			{
+				mRects[i] = NULL;	
+			}
+		}
+	}
+	if (!(mTime % (2*TIME_CONSTANT) == 0))
+	{
+		return;
+	}
+	AddRect();
+}
+
+/**
  * Update the characters position
  * Calls Move() if character is moving.
  */
 int GameData::Update()
 {
-	if (SDL_GetTicks() % TIME_CONSTANT == 0)
-	{
-		mTime++;
-	}
+	mTime = SDL_GetTicks();
+	RectHandler();
 	if (mVelX != 0 || mVelY != 0)
 	{
 		Move();
