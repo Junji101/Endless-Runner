@@ -33,6 +33,7 @@ class GameData
 	bool mDone;			/* Check if done */
 	//Private Methods
 	void SetPhysics();
+	int SetSound();
 	int GetRectNum();	/* Gets the num of an empty Rect */
 	int AddRect();		/* Adds a rect to a memory alloc in mRects[] */
 	int GetFrameNum(int vel, int time);	/*Gets num of Frame to use from char */
@@ -57,6 +58,12 @@ class GameData
 	SDL_Rect* GetFrameRect(int frame);
 	SDL_Rect* LoadRect(int a[2], int b[2],int c,int d);		/* Rand Rectangle Function */
 	SDL_Texture* LoadTexture( std::string path );	/* Load Texture from file */
+	//Music & Sound
+	
+	Mix_Music* mMusic;
+	Mix_Chunk* mBoom;
+	Mix_Chunk* mPound;
+
 public:
 	//Constructors
 

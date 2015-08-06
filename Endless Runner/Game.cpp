@@ -1,5 +1,6 @@
 #include <SDL.h>
 #include <SDL_image.h>
+#include <SDL_mixer.h>
 #include <stdio.h>
 #include <string>
 #include <iostream>
@@ -40,6 +41,31 @@ void GameData::SetPhysics()
 }
 
 /**
+ *Sets up the sound for the game
+ *
+ */
+int GameData::SetSound()
+{
+	if ((mMusic = Mix_LoadMUS("Sound/beat.wav")) == NULL)
+	{
+		printf( "Failed to load beat music! SDL_mixer Error: %s\n", Mix_GetError() );
+		return -1;
+	}
+	if ((mBoom = Mix_LoadWAV("Sound/scratch.wav")) == NULL)
+	{
+		printf( "Failed to load beat music! SDL_mixer Error: %s\n", Mix_GetError() );
+		return -1;
+	}
+	if ((mPound = Mix_LoadWAV("Sound/low.wav")) == NULL)
+	{
+		printf( "Failed to load beat music! SDL_mixer Error: %s\n", Mix_GetError() );
+		return -1;
+	}
+	return 0;
+}
+
+
+/**
  *Sets up the loading of SDL
  *@return Creates window, renderer, and img flags
  */
@@ -77,6 +103,11 @@ int GameData::Setup()
 			return -1;
 		}
 	}
+	if( Mix_OpenAudio( 44100, MIX_DEFAULT_FORMAT, 2, 2048 ) < 0 )
+	{
+		printf( "SDL_mixer could not initialize! SDL_mixer Error: %s\n", Mix_GetError() ); 
+		return -1; 
+	}
 	
 	SetPhysics();
 	mBox = false;
@@ -93,8 +124,13 @@ int GameData::Shutdown()
 	SDL_DestroyTexture( mTexture ); 
 	//Destroy mWindow 
 	SDL_DestroyRenderer( mRenderer ); 
-	//Quit SDL subsystems 
 	SDL_DestroyWindow( mWindow );
+	//Free Music
+	Mix_FreeMusic(mMusic);
+	Mix_FreeChunk(mBoom);
+	Mix_FreeChunk(mPound);
+	//Quit SDL subsystems 
+	Mix_Quit();
 	IMG_Quit();
 	SDL_Quit();
 	return 0;
@@ -327,9 +363,14 @@ int GameData::Draw()
 		 printf( "Failed to load texture image!\n" ); 
 		 return -1;
 	 }
+	 if (SetSound() < 0)
+	 {
+		 return -1;
+	 }
+	 Mix_PlayMusic(mMusic,-1);
 	 return 0;
  }
-
+	 
  /**
   *Gets input from user
   *Quits if quit button is pressed
@@ -355,6 +396,15 @@ int GameData::Input()
 		case SDLK_d:
 			mVelX += CHAR_SPEED;
 			printf("Right \n");
+			break;
+		case SDLK_m:
+			if(Mix_PlayingMusic() == 0)
+			{
+				Mix_PlayMusic(mMusic,-1);
+			} else
+			{
+				Mix_HaltMusic();
+			}
 			break;
 		default:
 			printf("Nothing \n");
