@@ -24,7 +24,12 @@ const int BOX_HEIGHT_MAX = SCREEN_HEIGHT/5;
 const int BOX_WIDTH_MAX = SCREEN_HEIGHT/3;
 const int BOX_MAX = 10;
 const int BOX_SPEED = 3;
-	
+//Background
+const int BACKG_WIDTH = SCREEN_WIDTH/3;
+const int BACKG_HEIGHT = SCREEN_HEIGHT - 50;
+const SDL_Rect BACKG_RECT_DEFAULT = {SCREEN_WIDTH,0,BACKG_WIDTH,BACKG_HEIGHT};
+const int BACKG_MAX = 4;
+const int BACKG_SPEED = 1;
 
 
 void GameData::SetPhysics()
@@ -38,6 +43,19 @@ void GameData::SetPhysics()
 	mTime = 0;
 	srand(time(0));
 
+}
+
+void GameData::SetBackG()
+{
+	for(int i = 0; i < BACKG_MAX; i++)
+	{
+		
+		mTempBack[i].h = BACKG_HEIGHT;
+		mTempBack[i].w = BACKG_WIDTH;
+		mTempBack[i].x = i*BACKG_WIDTH;
+		mTempBack[i].y = 0;
+		mBackG[i] = &mTempBack[i];
+	}
 }
 
 /**
@@ -110,6 +128,7 @@ int GameData::Setup()
 	}
 	
 	SetPhysics();
+	SetBackG();
 	mBox = false;
 	mChanged = true;
 	return 0;
@@ -141,17 +160,17 @@ int GameData::Shutdown()
  * @param frame = current frame
  * @return SDL_Rect*
  */
-SDL_Rect* GameData::GetFrameRect(int frame)
+SDL_Rect* GameData::GetFrameRect(int frame, int frameWidth, int frameHeight)
 {
 	SDL_Rect tempRect;
-	tempRect.h = CHAR_HEIGHT;
-	tempRect.w = CHAR_WIDTH;
+	tempRect.h = frameHeight;
+	tempRect.w = frameWidth;
 	tempRect.y = 0;
 	switch(frame)
 	{
 		case 0: tempRect.x = 0; break;
-		case 1: tempRect.x = CHAR_WIDTH; break;
-		case 2: tempRect.x = 2*CHAR_WIDTH; break;
+		case 1: tempRect.x = frameWidth; break;
+		case 2: tempRect.x = 2*frameWidth; break;
 		default: tempRect.x = 0; break;
 	}
 
@@ -217,7 +236,7 @@ SDL_Texture* GameData::LoadTexture( std::string path )
  * @param time -time stamp
  * @return frame num
  */
-int GameData::GetFrameNum(int vel, int time)
+int GameData::CharFrameNum(int vel, int time)
 {
 	int tempTime = time%120;
 	if(vel != 0)
@@ -233,30 +252,6 @@ int GameData::GetFrameNum(int vel, int time)
 		}
 	}
 
-	return 0;
-}
-
-/**
- * Draws floor using mGround texture
- * 
- */
-int GameData::DrawFloor()
-{
-	SDL_Rect fillRect = { 0 , (SCREEN_HEIGHT-50), SCREEN_WIDTH, 50};
-	//SDL_SetRenderDrawColor( mRenderer, 0xFF, 0x00, 0x00, 0xFF ); 
-	//SDL_RenderFillRect( mRenderer, &fillRect );
-	SDL_RenderCopy( mRenderer, mGround, NULL, &fillRect);
-	return 0;
-}
-
-/**
- * Draw your character on screen
- * Using mChar texture
- */
-int GameData::DrawChar()
-{
-	SDL_Rect fillRect = {mCharX,mCharY, 50, 50};
-	SDL_RenderCopy( mRenderer, mChar, GetFrameRect(GetFrameNum(mVelX,(mTime%3))), &fillRect);
 	return 0;
 }
 
@@ -290,6 +285,54 @@ int GameData::AddRect()
 }
 
 /**
+ * Add a background to the array
+ *
+ */
+int GameData::AddBackG()
+{
+	for (int i = 0; i < BACKG_MAX; i++)
+	{
+		if(mBackG[i] != NULL)
+		{
+			if (mBackG[i]->x < (-BACKG_WIDTH))
+			{
+				mBackG[i] = NULL;
+			}
+		}
+		else
+		{
+			mTempBack[i] = BACKG_RECT_DEFAULT;
+			mBackG[i] = &mTempBack[i];
+		}
+	}
+	return 0;
+}
+
+/**
+ * Draws floor using mGround texture
+ * 
+ */
+int GameData::DrawFloor()
+{
+	SDL_Rect fillRect = { 0 , (SCREEN_HEIGHT-50), SCREEN_WIDTH, 50};
+	//SDL_SetRenderDrawColor( mRenderer, 0xFF, 0x00, 0x00, 0xFF ); 
+	//SDL_RenderFillRect( mRenderer, &fillRect );
+	SDL_RenderCopy( mRenderer, mGround, NULL, &fillRect);
+	return 0;
+}
+
+/**
+ * Draw your character on screen
+ * Using mChar texture
+ */
+int GameData::DrawChar()
+{
+	SDL_Rect fillRect = {mCharX,mCharY, 50, 50};
+	SDL_RenderCopy( mRenderer, mChar, GetFrameRect(CharFrameNum(mVelX,(mTime)),CHAR_WIDTH,CHAR_HEIGHT), &fillRect);
+	return 0;
+}
+
+/**
  * Draw a platform
  * @param RectNum -Rectangle in array that is rendering
  */
@@ -313,7 +356,13 @@ int GameData::DrawStuff()
 */
 int GameData::DrawBackG()
 {
-	SDL_RenderCopy( mRenderer, mTexture, NULL, NULL );
+	for(int i = 0;i < BACKG_MAX; i++)
+	{
+		if (mBackG[i] != NULL)
+		{
+			SDL_RenderCopy( mRenderer, mTexture, NULL, mBackG[i]);
+		}
+	}
 	return 0;
 }
 
@@ -466,11 +515,35 @@ void GameData::RectHandler()
 			}
 		}
 	}
-	if (!(mTime % (2*TIME_CONSTANT) == 0))
+	if (!(mTime % (TIME_CONSTANT) == 0))
 	{
 		return;
 	}
 	AddRect();
+}
+
+/**
+ * Manages the positions and memory of the Rects on screen
+ *
+ */
+
+int GameData::BackGHandler()
+{
+	
+	for(int i = 0; i < BACKG_MAX; i++)
+	{
+		if(mBackG[i] != NULL)
+		{
+			
+			mBackG[i]->x -= BACKG_SPEED;
+			//if ((mBackG[i]->x) < BACKG_SPEED)
+			//{
+			//	mBackG[i] = NULL;	
+			//}
+		}
+	}
+	AddBackG();
+	return 0;
 }
 
 /**
@@ -481,6 +554,7 @@ int GameData::Update()
 {
 	mTime = SDL_GetTicks();
 	RectHandler();
+	BackGHandler();
 	if (mVelX != 0 || mVelY != 0)
 	{
 		Move();

@@ -27,6 +27,7 @@ class GameData
 	int mBoxCount;		/* Counts objects on screen */
 	//Rect for later use
 	SDL_Rect mTempRect[10];
+	SDL_Rect mTempBack[4];
 
 	bool mChanged;		/* Check if screen changed */
 	bool mBox;			/* Check if box is made */
@@ -34,9 +35,13 @@ class GameData
 	//Private Methods
 	void SetPhysics();
 	int SetSound();
+	//
+	void SetBackG();
 	int GetRectNum();	/* Gets the num of an empty Rect */
 	int AddRect();		/* Adds a rect to a memory alloc in mRects[] */
-	int GetFrameNum(int vel, int time);	/*Gets num of Frame to use from char */
+	int AddBackG();
+	int CharFrameNum(int vel, int time);	/*Gets num of Frame to use from char */
+	int BackFrameNum(int time);
 	int Move();
 	int Input();
 	int Update();
@@ -46,8 +51,9 @@ class GameData
 	int DrawChar();
 	int DrawFloor();
 	int DrawStuff();
-	//Rect Handler
+	//Handlers
 	void RectHandler();	/* Handles the Rectangles on screen */
+	int BackGHandler();
 
 	SDL_Window* mWindow;		/* Window from SDL */
 	SDL_Renderer* mRenderer;	/* The window renderer */
@@ -55,7 +61,8 @@ class GameData
 	SDL_Texture* mChar;			/* Texture for Hero */
 	SDL_Texture* mGround;		/* Texture for ground */
 	SDL_Rect* mRects[10];
-	SDL_Rect* GetFrameRect(int frame);
+	SDL_Rect* mBackG[4];
+	SDL_Rect* GetFrameRect(int frame, int frameWidth, int frameHeight);
 	SDL_Rect* LoadRect(int a[2], int b[2],int c,int d);		/* Rand Rectangle Function */
 	SDL_Texture* LoadTexture( std::string path );	/* Load Texture from file */
 	//Music & Sound
