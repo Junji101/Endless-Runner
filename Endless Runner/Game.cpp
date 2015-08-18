@@ -10,8 +10,8 @@ using namespace std;
 
 const int SDL_DELAY = 10;
 const int TIME_CONSTANT = 300;
-const int SCREEN_HEIGHT = 480;
-const int SCREEN_WIDTH = 640;
+int SCREEN_HEIGHT = 480;
+int SCREEN_WIDTH = 640;
 //Char specifics
 const int CHAR_HEIGHT = 27;
 const int CHAR_WIDTH = 24;
@@ -32,29 +32,63 @@ const SDL_Rect BACKG_RECT_DEFAULT = {SCREEN_WIDTH,0,BACKG_WIDTH,BACKG_HEIGHT};
 const int BACKG_MAX = 4;
 const int BACKG_SPEED = 1;
 
-int sdl_delay;
-int CONFIGS[20];
+string fileName ("Config/Config.txt");
+string fileNum;
+const int MAX_LINES = 2;
 FILE* file;
-
 
 void GameData::LoadConfig()
 {
-	file = fopen("Config/Config.txt", "r");
-	fseek(file,0,SEEK_END);
-	//printf("Size of file: %s is %d \n", "Config.txt",sizeof(file));
-	if (file == NULL || sizeof(file) <= 4)
+	file = fopen(fileName.c_str(), "r");
+	if (file == NULL)
 	{
 		fclose(file);
 		return;
 	}
-	
-	char c = ' ';
+
+	fseek(file,0,SEEK_END);
+	int size = ftell(file);
+	fclose(file);
+
+	if (size < 1)
+	{
+		return;
+	}
+	printf("Size of file: %s is %d \n", fileName.c_str() , size);
+	file = fopen(fileName.c_str(),"r");
+	int lineCount = 0;
+NextInt:
+	char c = 0;
+	int currentNum= 0;
+
 	do
 	{
 		fread((void*) c, sizeof(char), 1, file);
+		if (isdigit(c))
+		{
+			fileNum += c;
+		}
 
-	}while(c != '/n' || c == EOF);
-	printf("%c",c);
+	}while(c != '/n' || !feof(file));
+	lineCount++;
+	currentNum = atoi(fileNum.c_str());
+
+	switch(lineCount)
+	{
+	case 1:
+		SCREEN_HEIGHT = currentNum;
+		break;
+	case 2:
+		SCREEN_WIDTH = currentNum;
+		break;
+	default:
+		break;
+	}
+	printf("%i \n",c);
+	if (lineCount < MAX_LINES)
+	{
+		goto NextInt;
+	}
 }
 
 
