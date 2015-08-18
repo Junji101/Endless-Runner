@@ -70,6 +70,10 @@ class GameData
 	Mix_Music* mMusic;
 	Mix_Chunk* mBoom;
 	Mix_Chunk* mPound;
+////////////////////////////////
+/// CONFIG FILE STUFF///////////
+////////////////////////////////
+	void LoadConfig();
 
 public:
 	//Constructors
