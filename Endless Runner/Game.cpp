@@ -58,18 +58,19 @@ void GameData::LoadConfig()
 	file = fopen(fileName.c_str(),"r");
 	int lineCount = 0;
 NextInt:
-	char c = 0;
+	char d = ' ';
 	int currentNum= 0;
 
 	do
 	{
-		fread((void*) c, sizeof(char), 1, file);
-		if (isdigit(c))
+		fread((void*) d, sizeof(char), 1, file);
+		printf("%c\n",d);
+		if (isdigit(d))
 		{
-			fileNum += c;
+			fileNum += d;
 		}
 
-	}while(c != '/n' || !feof(file));
+	}while(d != '/n' || !feof(file));
 	lineCount++;
 	currentNum = atoi(fileNum.c_str());
 
@@ -84,11 +85,13 @@ NextInt:
 	default:
 		break;
 	}
-	printf("%i \n",c);
+	printf("%i \n",d);
 	if (lineCount < MAX_LINES)
 	{
+		free((void*) d);
 		goto NextInt;
 	}
+	fclose(file);
 }
 
 
