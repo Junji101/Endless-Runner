@@ -17,20 +17,20 @@ const int CHAR_HEIGHT = 27;
 const int CHAR_WIDTH = 24;
 const int CHAR_SPEED = 3;
 //Rect Generation
-const int BOX_X_MIN = SCREEN_WIDTH/3;
-const int BOX_X_MAX = 2*SCREEN_WIDTH/3;
-const int BOX_Y_MIN = SCREEN_HEIGHT/3;
-const int BOX_Y_MAX = 2*SCREEN_HEIGHT/3;
-const int BOX_HEIGHT_MAX = SCREEN_HEIGHT/5;
-const int BOX_WIDTH_MAX = SCREEN_HEIGHT/3;
-const int BOX_MAX = 10;
-const int BOX_SPEED = 3;
+int BOX_X_MIN;
+int BOX_X_MAX;
+int BOX_Y_MIN;
+int BOX_Y_MAX;
+int BOX_HEIGHT_MAX;
+int BOX_WIDTH_MAX;
+int BOX_MAX = 10;
+int BOX_SPEED = 3;
 //Background
-const int BACKG_WIDTH = SCREEN_WIDTH/3;
-const int BACKG_HEIGHT = SCREEN_HEIGHT - 50;
-const SDL_Rect BACKG_RECT_DEFAULT = {SCREEN_WIDTH,0,BACKG_WIDTH,BACKG_HEIGHT};
-const int BACKG_MAX = 4;
-const int BACKG_SPEED = 1;
+int BACKG_MAX = 4;
+int BACKG_SPEED = 1;
+int BACKG_WIDTH;
+int BACKG_HEIGHT;
+SDL_Rect BACKG_RECT_DEFAULT;
 
 string fileName ("Config/Config.txt");
 string fileNum;
@@ -63,14 +63,14 @@ NextInt:
 
 	do
 	{
-		fread((void*) d, sizeof(char), 1, file);
+		fread((void*) &d, sizeof(char), 1, file);
 		printf("%c\n",d);
-		if (isdigit(d))
+		if (isdigit(d) && !feof(file))
 		{
 			fileNum += d;
 		}
 
-	}while(d != '/n' || !feof(file));
+	}while( !feof(file) && d != '\n');
 	lineCount++;
 	currentNum = atoi(fileNum.c_str());
 
@@ -85,13 +85,14 @@ NextInt:
 	default:
 		break;
 	}
-	printf("%i \n",d);
+	printf("%c \n",d);
 	if (lineCount < MAX_LINES)
 	{
-		free((void*) d);
+		fileNum = "";
 		goto NextInt;
 	}
 	fclose(file);
+
 }
 
 
@@ -119,7 +120,6 @@ void GameData::SetBackG()
 {
 	for(int i = 0; i < BACKG_MAX; i++)
 	{
-		
 		mTempBack[i].h = BACKG_HEIGHT;
 		mTempBack[i].w = BACKG_WIDTH;
 		mTempBack[i].x = i*BACKG_WIDTH;
@@ -159,7 +159,6 @@ int GameData::SetSound()
  */
 int GameData::Setup()
 {
-	LoadConfig();
 	if (SDL_Init( SDL_INIT_EVERYTHING ) < 0)
 	{
 		printf("SDL Error: %s\n", SDL_GetError());
@@ -199,9 +198,24 @@ int GameData::Setup()
 	}
 	
 	SetPhysics();
-	SetBackG();
 	mBox = false;
 	mChanged = true;
+	//Rect Generation
+	BOX_X_MIN = SCREEN_WIDTH/3;
+	BOX_X_MAX = 2*SCREEN_WIDTH/3;
+	BOX_Y_MIN = SCREEN_HEIGHT/3;
+	BOX_Y_MAX = 2*SCREEN_HEIGHT/3;
+	BOX_HEIGHT_MAX = SCREEN_HEIGHT/5;
+	BOX_WIDTH_MAX = SCREEN_HEIGHT/3;
+
+	//Background
+	BACKG_WIDTH = SCREEN_WIDTH/3;
+	BACKG_HEIGHT = SCREEN_HEIGHT - 50;
+	BACKG_RECT_DEFAULT.x = SCREEN_WIDTH;
+	BACKG_RECT_DEFAULT.y = 0;
+	BACKG_RECT_DEFAULT.w = BACKG_WIDTH;
+	BACKG_RECT_DEFAULT.h = BACKG_HEIGHT;
+	SetBackG();
 	return 0;
 }
 

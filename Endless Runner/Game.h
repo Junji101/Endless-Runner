@@ -73,12 +73,13 @@ class GameData
 ////////////////////////////////
 /// CONFIG FILE STUFF///////////
 ////////////////////////////////
-	void LoadConfig();
+	
 
 public:
 	//Constructors
 
 	//Public Methods
+	void LoadConfig();
 	int Setup();
 	int LoadMedia();
 	int Run();

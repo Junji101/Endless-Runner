@@ -10,6 +10,7 @@ GameData game;
 */
 int main(int argv, char *args[])
 {
+	game.LoadConfig();
 	if (game.Setup() < 0)
 	{
 		return -1;
