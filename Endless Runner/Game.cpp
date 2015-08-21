@@ -30,6 +30,11 @@ const int BACKG_HEIGHT = SCREEN_HEIGHT - 50;
 const SDL_Rect BACKG_RECT_DEFAULT = {SCREEN_WIDTH,0,BACKG_WIDTH,BACKG_HEIGHT};
 const int BACKG_MAX = 4;
 const int BACKG_SPEED = 1;
+//Start Up
+const int START_X = SCREEN_WIDTH/3;
+const int START_Y = SCREEN_HEIGHT/3 -50;
+const int START_H = 250;
+const int START_W = 250;
 
 
 void GameData::SetPhysics()
@@ -129,7 +134,7 @@ int GameData::Setup()
 	
 	SetPhysics();
 	SetBackG();
-	mBox = false;
+	mGameState = 0;
 	mChanged = true;
 	return 0;
 }
@@ -315,8 +320,6 @@ int GameData::AddBackG()
 int GameData::DrawFloor()
 {
 	SDL_Rect fillRect = { 0 , (SCREEN_HEIGHT-50), SCREEN_WIDTH, 50};
-	//SDL_SetRenderDrawColor( mRenderer, 0xFF, 0x00, 0x00, 0xFF ); 
-	//SDL_RenderFillRect( mRenderer, &fillRect );
 	SDL_RenderCopy( mRenderer, mGround, NULL, &fillRect);
 	return 0;
 }
@@ -334,11 +337,10 @@ int GameData::DrawChar()
 
 /**
  * Draw a platform
- * @param RectNum -Rectangle in array that is rendering
+ *
  */
 int GameData::DrawStuff()
 {
-	//SDL_Rect fillRect = { SCREEN_WIDTH/2 , (SCREEN_HEIGHT-200), 500, 50};
 
 	for(int i = 0;i < BOX_MAX; i++)
 	{
@@ -367,25 +369,62 @@ int GameData::DrawBackG()
 }
 
 /**
+ * Draw StartUp screen
+ *
+ */
+int GameData::DrawStartUp()
+{
+	SDL_Rect fillRect = {START_X,START_Y,START_W,START_H};
+	SDL_RenderCopy(mRenderer, mStartText,NULL,&fillRect);
+	return 0;
+
+}
+
+int GameData::DrawEnd()
+{
+	SDL_RenderCopy(mRenderer, mBye, NULL, NULL);
+	return 0;
+}
+
+
+/**
  *Drawing to screen function using SDL Rendering
  *
  */
 int GameData::Draw()
 {
-	//SDL_BlitSurface(mHello, NULL, mScreenSurface, NULL);
-	//SDL_UpdatemWindowSurface(mWindow);
-	//Clear screen 
-	SDL_RenderClear( mRenderer ); 
-	//Render texture to screen
-	DrawBackG();
-	DrawFloor();
-	DrawChar();
-	DrawStuff();
+	if (mGameState == 0)
+	{
+		SDL_RenderClear( mRenderer ); 
+		DrawBackG();
+		DrawStartUp();
+		SDL_RenderPresent( mRenderer );
+		return 0;
+	} 
+	else if (mGameState == 1)
+	{
+		//Clear screen 
+		SDL_RenderClear( mRenderer ); 
 
-	//Update screen
-	SDL_RenderPresent( mRenderer );
+		//Render texture to screen
+		DrawBackG();
+		DrawFloor();
+		DrawChar();
+		DrawStuff();
 
-	return 0;
+		//Update screen
+		SDL_RenderPresent( mRenderer );
+		return 0;
+	}
+	else if (mGameState == 2)
+	{
+		SDL_RenderClear( mRenderer );
+		DrawEnd();
+		SDL_RenderPresent( mRenderer );
+		SDL_Delay(500);
+		return 0;
+	}
+
 }
 
 
@@ -408,6 +447,16 @@ int GameData::Draw()
 		 return -1;
 	 }
 	 if ((mGround = LoadTexture("Image/Ground.png" )) == NULL)
+	 {
+		 printf( "Failed to load texture image!\n" ); 
+		 return -1;
+	 }
+	 if ((mStartText = LoadTexture("Image/PressEnter.png" )) == NULL)
+	 {
+		 printf( "Failed to load texture image!\n" ); 
+		 return -1;
+	 }
+	 if ((mBye = LoadTexture("Image/Bye.png" )) == NULL)
 	 {
 		 printf( "Failed to load texture image!\n" ); 
 		 return -1;
@@ -453,6 +502,25 @@ int GameData::Input()
 			} else
 			{
 				Mix_HaltMusic();
+			}
+			break;
+		case SDLK_RETURN:
+			printf("Return \n");
+			mGameState = 1;
+			break;
+		case SDLK_ESCAPE:
+			printf("Escape \n");
+			mGameState = 2;
+			mDone = true;
+			break;
+		case SDLK_p:
+			printf("Pause \n");
+			if (mGameState == 1)
+			{
+				mGameState = -1;
+			} else if (mGameState == -1)
+			{
+				mGameState = 1;
 			}
 			break;
 		default:
@@ -552,17 +620,14 @@ int GameData::BackGHandler()
  */
 int GameData::Update()
 {
+	if (mGameState == -1)
+	{
+		return -1;
+	}
 	mTime = SDL_GetTicks();
 	RectHandler();
 	BackGHandler();
-	if (mVelX != 0 || mVelY != 0)
-	{
-		Move();
-		mChanged = false;
-		return -1;
-	}
-
-	
+	Move();
 	return 0;
 }
 
@@ -576,7 +641,7 @@ int GameData::Run()
 	do
 	{
 		Input();
-		if (Update() < 0 || mChanged)
+		if (Update() || mChanged)
 		{
 			Draw();
 		}
