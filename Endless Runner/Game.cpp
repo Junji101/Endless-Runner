@@ -2,41 +2,108 @@
 #include <SDL_image.h>
 #include <SDL_mixer.h>
 #include <stdio.h>
-#include <string>
+//#include <string>
 #include <iostream>
 #include <ctime>
 #include "Game.h"
+using namespace std;
 
 const int SDL_DELAY = 10;
 const int TIME_CONSTANT = 300;
-const int SCREEN_HEIGHT = 480;
-const int SCREEN_WIDTH = 640;
+int SCREEN_HEIGHT = 480;
+int SCREEN_WIDTH = 640;
 //Char specifics
 const int CHAR_HEIGHT = 27;
 const int CHAR_WIDTH = 24;
 const int CHAR_SPEED = 3;
 //Rect Generation
-const int BOX_X_MIN = SCREEN_WIDTH/3;
-const int BOX_X_MAX = 2*SCREEN_WIDTH/3;
-const int BOX_Y_MIN = SCREEN_HEIGHT/3;
-const int BOX_Y_MAX = 2*SCREEN_HEIGHT/3;
-const int BOX_HEIGHT_MAX = SCREEN_HEIGHT/5;
-const int BOX_WIDTH_MAX = SCREEN_HEIGHT/3;
-const int BOX_MAX = 10;
-const int BOX_SPEED = 3;
-//Background
-const int BACKG_WIDTH = SCREEN_WIDTH/3;
-const int BACKG_HEIGHT = SCREEN_HEIGHT - 50;
-const SDL_Rect BACKG_RECT_DEFAULT = {SCREEN_WIDTH,0,BACKG_WIDTH,BACKG_HEIGHT};
-const int BACKG_MAX = 4;
-const int BACKG_SPEED = 1;
+int BOX_X_MIN;
+int BOX_X_MAX;
+int BOX_Y_MIN;
+int BOX_Y_MAX;
+int BOX_HEIGHT_MAX;
+int BOX_WIDTH_MAX;
+int BOX_MAX = 10;
+int BOX_SPEED = 3;
 //Start Up
 const int START_X = SCREEN_WIDTH/3;
 const int START_Y = SCREEN_HEIGHT/3 -50;
 const int START_H = 250;
 const int START_W = 250;
+int BACKG_MAX = 4;
+int BACKG_SPEED = 1;
+int BACKG_WIDTH;
+int BACKG_HEIGHT;
+SDL_Rect BACKG_RECT_DEFAULT;
+
+string fileName ("Config/Config.txt");
+string fileNum;
+const int MAX_LINES = 2;
+FILE* file;
+
+void GameData::LoadConfig()
+{
+	file = fopen(fileName.c_str(), "r");
+	if (file == NULL)
+	{
+		fclose(file);
+		return;
+	}
+
+	fseek(file,0,SEEK_END);
+	int size = ftell(file);
+	fclose(file);
+
+	if (size < 1)
+	{
+		return;
+	}
+	printf("Size of file: %s is %d \n", fileName.c_str() , size);
+	file = fopen(fileName.c_str(),"r");
+	int lineCount = 0;
+NextInt:
+	char d = ' ';
+	int currentNum= 0;
+
+	do
+	{
+		fread((void*) &d, sizeof(char), 1, file);
+		printf("%c\n",d);
+		if (isdigit(d) && !feof(file))
+		{
+			fileNum += d;
+		}
+
+	}while( !feof(file) && d != '\n');
+	lineCount++;
+	currentNum = atoi(fileNum.c_str());
+
+	switch(lineCount)
+	{
+	case 1:
+		SCREEN_HEIGHT = currentNum;
+		break;
+	case 2:
+		SCREEN_WIDTH = currentNum;
+		break;
+	default:
+		break;
+	}
+	printf("%c \n",d);
+	if (lineCount < MAX_LINES)
+	{
+		fileNum = "";
+		goto NextInt;
+	}
+	fclose(file);
+
+}
 
 
+
+/**
+ * Setup the variables for physics
+ */
 void GameData::SetPhysics()
 {
 	mCharX = 50;
@@ -50,11 +117,13 @@ void GameData::SetPhysics()
 
 }
 
+/**
+ * Setup Initial BackG Vars
+ */
 void GameData::SetBackG()
 {
 	for(int i = 0; i < BACKG_MAX; i++)
 	{
-		
 		mTempBack[i].h = BACKG_HEIGHT;
 		mTempBack[i].w = BACKG_WIDTH;
 		mTempBack[i].x = i*BACKG_WIDTH;
@@ -133,9 +202,25 @@ int GameData::Setup()
 	}
 	
 	SetPhysics();
-	SetBackG();
 	mGameState = 0;
+	mBox = false;
 	mChanged = true;
+	//Rect Generation
+	BOX_X_MIN = SCREEN_WIDTH/3;
+	BOX_X_MAX = 2*SCREEN_WIDTH/3;
+	BOX_Y_MIN = SCREEN_HEIGHT/3;
+	BOX_Y_MAX = 2*SCREEN_HEIGHT/3;
+	BOX_HEIGHT_MAX = SCREEN_HEIGHT/5;
+	BOX_WIDTH_MAX = SCREEN_HEIGHT/3;
+
+	//Background
+	BACKG_WIDTH = SCREEN_WIDTH/3;
+	BACKG_HEIGHT = SCREEN_HEIGHT - 50;
+	BACKG_RECT_DEFAULT.x = SCREEN_WIDTH;
+	BACKG_RECT_DEFAULT.y = 0;
+	BACKG_RECT_DEFAULT.w = BACKG_WIDTH;
+	BACKG_RECT_DEFAULT.h = BACKG_HEIGHT;
+	SetBackG();
 	return 0;
 }
 
@@ -185,8 +270,11 @@ SDL_Rect* GameData::GetFrameRect(int frame, int frameWidth, int frameHeight)
 
 /**
  * Create Random Rect given limits
- * Rect created with (x,y) ; (h,w)
- * a[1] is max, a[2] is min
+ * @param a[2] : Max/Min x location
+ * @param b[2] : Max/Min y location
+ * @param c : Max height
+ * @param d : Max width
+ * @return &mTempRect[GetRectNum()] : Adress of SDL_Rect created and stored by this function 
  */
 SDL_Rect* GameData::LoadRect(int a[2], int b[2], int c, int d)
 {
@@ -198,8 +286,8 @@ SDL_Rect* GameData::LoadRect(int a[2], int b[2], int c, int d)
 	int tempNum = GetRectNum();
 	mTempRect[tempNum].x = rand() % (a[0]-a[1]) + a[1];
 	mTempRect[tempNum].y = rand() % (b[0]-b[1]) + b[1];
-	mTempRect[tempNum].h = rand() % c;
-	mTempRect[tempNum].w = rand() % d;
+	mTempRect[tempNum].h = rand() % c + c/2;
+	mTempRect[tempNum].w = rand() % d + d/2;
 	
 	newRect = &mTempRect[tempNum];
 	return newRect;
@@ -207,8 +295,8 @@ SDL_Rect* GameData::LoadRect(int a[2], int b[2], int c, int d)
 
 
 /**
- * Gets string for path of image
- * Converts from Surface to Texture
+ * Gets string for path of image and converts from Surface to Texture
+ * @param string path : Dir of file
  * @return texture
  */
 SDL_Texture* GameData::LoadTexture( std::string path ) 
@@ -260,6 +348,10 @@ int GameData::CharFrameNum(int vel, int time)
 	return 0;
 }
 
+/**
+ * Gets a number of an empty slot from mRects[]
+ * @return int i
+ */
 int GameData::GetRectNum()
 {
 	for (int i = 0; i < BOX_MAX; i++)
@@ -430,8 +522,7 @@ int GameData::Draw()
 
 
  /**
-  * Loads the texture into mTexture
-  * Uses LoadTexture from above
+  * Loads the textures and sounds
   */
  int GameData::LoadMedia() 
  {
@@ -546,7 +637,7 @@ int GameData::Move(){
 	}
 	
 	// Y Velocity Control
-	if (mCharY > 0)
+	if (mCharY != 0)
 	{
 		mCharY += mVelY;
 	}
@@ -556,7 +647,7 @@ int GameData::Move(){
 	}
 	if  (( mCharY < 0 ) || ( mCharY + CHAR_WIDTH + 50 > SCREEN_HEIGHT ) )
 	{
-		mCharY += mVelY;
+		mCharY -= mVelY;
 		mVelY = 0;
 	}
 
@@ -591,7 +682,7 @@ void GameData::RectHandler()
 }
 
 /**
- * Manages the positions and memory of the Rects on screen
+ * Manages the positions and memory of the BackGrounds on screen
  *
  */
 
@@ -611,6 +702,7 @@ int GameData::BackGHandler()
 		}
 	}
 	AddBackG();
+	mChanged = true;
 	return 0;
 }
 
@@ -632,8 +724,8 @@ int GameData::Update()
 }
 
 /**
- *Main game loop
- *Gets input and updates/draws
+ *Main game loop : Gets input and updates/draws
+ * @return 0 : When done
  */
 
 int GameData::Run()
